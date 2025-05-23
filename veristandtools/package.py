@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 import os
+import shutil
 from typing import List
 
 NIPKG_PATH = r"C:\Program Files\National Instruments\NI Package Manager\nipkg.exe"
@@ -64,11 +65,11 @@ class PackageBuilder():
         self._package_dir = package_dir
 
         self._create_package_layout()
-        # _copy_custom_devices()
-        # _copy_slsc_plugins()
-        # _copy_project_files()
-        # _create_control_file()
-        # build_package()
+        self._copy_custom_devices()
+        # self._copy_slsc_plugins()
+        # self._copy_project_files()
+        # self._create_control_file()
+        # self.build_package()
 
     def _create_package_layout(self) -> None:
         '''
@@ -87,6 +88,17 @@ class PackageBuilder():
 
         with open(os.path.join(self._package_dir, "debian-binary"), "w") as db_file:
             db_file.write("2.0")
+
+    def _copy_custom_devices(self) -> None:
+        '''
+        Copies all custom devices into package build folder
+        '''
+        cd_folder = os.path.join(os.environ["PUBLIC"], "Documents", "National Instruments",
+                                 f"NI VeriStand {self._vs_version}", "Custom Devices")
+
+        if os.path.exists(cd_folder):
+            shutil.copytree(cd_folder, os.path.join(
+                self._package_vs_dir, "Custom Devices"))
 
 
 if __name__ == "__main__":
