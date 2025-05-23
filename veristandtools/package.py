@@ -6,6 +6,9 @@ from typing import List
 
 NIPKG_PATH = r"C:\Program Files\National Instruments\NI Package Manager\nipkg.exe"
 OUTPUT = r"C:\Users\MattJ\Desktop\nipkg_tests"
+PROJECT_FILES = [r"C:\Users\MattJ\Desktop\nipkg_tests\A429_Benchmark",
+                 r"C:\Users\MattJ\Desktop\nipkg_tests\Bloomy_Parameters.md",
+                 r"C:\Users\MattJ\Desktop\nipkg_tests\not_a_folder"]
 
 
 class PackageBuilder():
@@ -40,13 +43,13 @@ class PackageBuilder():
         except subprocess.CalledProcessError as e:
             print("An error occurred building the NIPKG: ", e)
 
-    def create_package(self, vs_version: str, project_paths: List[str] = None, output_dir: str = None) -> None:
+    def create_package(self, vs_version: str, project_file_paths: List[str] = None, output_dir: str = None) -> None:
         '''
         Creates NI package for distributing VeriStand projects.
 
         Args:
             vs_version: Year of VeriStand package is being created for (e.g. "2021")
-            project_paths: Paths to any additional files/folders to include in the package
+            project_file_paths: Paths to any additional files/folders to include in the package
             output_dir: Directory where output will be build (default to pwd)
         '''
         # set default output directory if needed
@@ -65,9 +68,9 @@ class PackageBuilder():
         self._package_dir = package_dir
 
         self._create_package_layout()
-        self._copy_custom_devices()
+        # self._copy_custom_devices()
         # self._copy_slsc_plugins()
-        # self._copy_project_files()
+        self._copy_project_files(project_file_paths)
         # self._create_control_file()
         # self.build_package()
 
@@ -100,7 +103,29 @@ class PackageBuilder():
             shutil.copytree(cd_folder, os.path.join(
                 self._package_vs_dir, "Custom Devices"))
 
+    def _copy_project_files(self, project_file_paths: List[str]) -> None:
+        '''
+        Copies all project_file_paths into NI package build folder
+
+        Args:
+            project_file_paths: List of file/folders to be copied
+        '''
+        for path in project_file_paths:
+            # copy folders
+            if os.path.isdir(path):
+                _, folder = os.path.split(path)
+                shutil.copytree(path, os.path.join(
+                    self._package_documents_dir, folder))
+
+            # copy files
+            elif os.path.isfile(path):
+                shutil.copy(path, self._package_documents_dir)
+
+            # unknown item
+            else:
+                print(f"Unable to copy into build: {path}")
+
 
 if __name__ == "__main__":
     pb = PackageBuilder()
-    pb.create_package("2021")
+    pb.create_package("2021", project_file_paths=PROJECT_FILES)
